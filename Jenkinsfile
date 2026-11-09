@@ -4,20 +4,26 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo '🛠️ Этап сборки: компилируем код (имитация)...'
-                sh 'sleep 2'
+                echo '🛠️ Сборка на хост-машине...'
+                sh 'uname -a' // Покажем, что мы на Linux-сервере
             }
         }
+        
         stage('Test') {
             steps {
-                echo '🧪 Этап тестирования: запускаем юнит-тесты (имитация)...'
-                sh 'echo "Все тесты прошли успешно!"'
+                echo '🧪 Тестирование на хост-машине...'
             }
         }
-        stage('Deploy') {
+
+        stage('Python Check in Docker') {
+            agent {
+                docker 'python:3.9-slim'
+            }
             steps {
-                echo '🚀 Этап деплоя: выкатываем приложение на сервер (имитация)...'
-                sh 'echo "Успешно задеплоено!"'
+                echo '🐍 Этот этап выполняется ВНУТРИ контейнера Python 3.9!'
+                sh 'python --version'
+                sh 'pwd'
+                sh 'ls -la'
             }
         }
     }
