@@ -1,29 +1,34 @@
+// Подключаем нашу библиотеку. Имя 'os-build-lib' мы настроим в Jenkins на следующем шаге.
+// Символ '_' означает "импортировать все функции из библиотеки в текущую область видимости"
+@Library('os-build-lib') _
+
 pipeline {
     agent any
 
-    stages {
-        stage('Build') {
-            steps {
-                echo '🛠️ Сборка на хост-машине...'
-                sh 'uname -a' // Покажем, что мы на Linux-сервере
-            }
-        }
-        
-        stage('Test') {
-            steps {
-                echo '🧪 Тестирование на хост-машине...'
-            }
-        }
+    // ЭТОТ БЛОК СОЗДАЕТ "КНОПКИ" И ВЫПАДАЮЩИЕ СПИСКИ В UI JENKINS
+    parameters {
+        choice(
+            name: 'OS_TYPE', 
+            choices: ['ubuntu-24.04', 'alpine-3.18'], 
+            description: 'Выберите дистрибутив для сборки'
+        )
+        choice(
+            name: 'RELEASE_VERSION', 
+            choices: ['1.0.0-beta', '1.0.0-rc', '1.0.0-stable'], 
+            description: 'Выберите версию релиза'
+        )
+    }
 
-        stage('Python Check in Docker') {
-            agent {
-                docker 'python:3.9-slim'
-            }
+    stages {
+        stage('Custom OS Build') {
             steps {
-                echo '🐍 Этот этап выполняется ВНУТРИ контейнера Python 3.9!'
-                sh 'python --version'
-                sh 'pwd'
-                sh 'ls -la'
+                echo "👤 Сборку инициировал пользователь: ${env.BUILD_USER_ID ?: 'unknown'}"
+                
+                // Вызываем нашу функцию из Shared Library и передаем ей Map с параметрами из UI
+                buildMiniOs([
+                    osType: params.OS_TYPE,
+                    releaseVersion: params.RELEASE_VERSION
+                ])
             }
         }
     }
