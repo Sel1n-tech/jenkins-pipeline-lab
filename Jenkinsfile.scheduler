@@ -34,7 +34,7 @@ pipeline {
                 echo "🚀 Запускаем джобу 'os-tests' с расширенными параметрами..."
                 
                 // КЛЮЧЕВАЯ КОМАНДА: Запуск другой джобы
-                build job: 'os-tests', 
+                build job: 'Test/os-test', 
                       parameters: [
                           string(name: 'OS_TYPE', value: params.OS_TYPE),
                           string(name: 'RELEASE_VERSION', value: params.RELEASE_VERSION),

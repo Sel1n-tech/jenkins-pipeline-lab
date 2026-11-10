@@ -46,7 +46,7 @@ pipeline {
             // что мы хотим протестировать только Ubuntu (или можно передавать список).
             // В реальном сценарии Job 1 триггерит Scheduler для каждой успешной сборки.
             
-            build job: 'os-scheduler',
+            build job: 'PROJECT/os-scheduler',
                   parameters: [
                       string(name: 'OS_TYPE', value: 'ubuntu-24.04'), // Хардкод для примера, можно брать из params
                       string(name: 'RELEASE_VERSION', value: params.RELEASE_VERSION)
