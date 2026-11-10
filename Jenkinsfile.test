@@ -1,0 +1,30 @@
+// Jenkinsfile.tests
+@Library('os-build-lib') _
+
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'OS_TYPE', description: 'Тип ОС')
+        string(name: 'RELEASE_VERSION', description: 'Версия релиза')
+        string(name: 'TEST_SUITE', description: 'Какой набор тестов запускать')
+        string(name: 'TIMEOUT', description: 'Таймаут выполнения (мин)')
+    }
+
+    stages {
+        stage('Running Tests') {
+            steps {
+                echo "🧪 =========================================="
+                echo "🧪 Запуск тестов для ${params.OS_TYPE} (${params.RELEASE_VERSION})"
+                echo "📋 Набор тестов: ${params.TEST_SUITE}"
+                echo "⏱️  Таймаут: ${params.TIMEOUT} мин"
+                echo "🧪 =========================================="
+                
+                // Имитация работы тестов
+                sh "echo 'Запуск ${params.TEST_SUITE}...'"
+                sh "sleep 3"
+                echo "✅ Тесты пройдены успешно!"
+            }
+        }
+    }
+}

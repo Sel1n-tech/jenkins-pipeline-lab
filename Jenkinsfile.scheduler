@@ -1,0 +1,48 @@
+// Jenkinsfile.scheduler
+@Library('os-build-lib') _
+
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'OS_TYPE')
+        string(name: 'RELEASE_VERSION')
+    }
+
+    stages {
+        stage('Analyze and Route') {
+            steps {
+                script {
+                    echo "🧠 Оркестратор получил запрос на тестирование ${params.OS_TYPE} (${params.RELEASE_VERSION})"
+                    
+                    // Вызываем функцию из Shared Library, чтобы получить конфиг для тестов
+                    def testConfig = osConfigs.getTestConfig(params.OS_TYPE, params.RELEASE_VERSION)
+                    
+                    echo "📖 Из Map библиотеки получены параметры:"
+                    echo "   - Test Suite: ${testConfig.testSuite}"
+                    echo "   - Timeout: ${testConfig.timeout}"
+                    
+                    // СОХРАНЯЕМ ПАРАМЕТРЫ ДЛЯ СЛЕДУДУЮЩЕГО ШАГА
+                    env.TEST_SUITE = testConfig.testSuite
+                    env.TIMEOUT = testConfig.timeout
+                }
+            }
+        }
+
+        stage('Trigger Test Job') {
+            steps {
+                echo "🚀 Запускаем джобу 'os-tests' с расширенными параметрами..."
+                
+                // КЛЮЧЕВАЯ КОМАНДА: Запуск другой джобы
+                build job: 'os-tests', 
+                      parameters: [
+                          string(name: 'OS_TYPE', value: params.OS_TYPE),
+                          string(name: 'RELEASE_VERSION', value: params.RELEASE_VERSION),
+                          string(name: 'TEST_SUITE', value: env.TEST_SUITE),
+                          string(name: 'TIMEOUT', value: env.TIMEOUT)
+                      ],
+                      wait: false // Не ждать завершения тестов, пусть идут фоном (или wait: true, если нужно синхронно)
+            }
+        }
+    }
+}
