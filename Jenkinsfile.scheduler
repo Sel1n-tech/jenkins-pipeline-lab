@@ -1,5 +1,5 @@
-// Jenkinsfile.scheduler
-@Library('os-build-lib') _
+@Library('os-build-lib@feature/oop-architecture') _
+import common.OSFactory
 
 pipeline {
     agent any
@@ -13,16 +13,20 @@ pipeline {
         stage('Analyze and Route') {
             steps {
                 script {
-                    echo "🧠 Оркестратор получил запрос на тестирование ${params.OS_TYPE} (${params.RELEASE_VERSION})"
+                    echo "🧠 Оркестратор получил запрос на тестирование ${params.OS_TYPE}"
                     
-                    // Вызываем функцию из Shared Library, чтобы получить конфиг для тестов
-                    def testConfig = osConfigs.getTestConfig(params.OS_TYPE, params.RELEASE_VERSION)
+                    // Создаем объект ОС
+                    def os = OSFactory.createOS(params.OS_TYPE, [
+                        releaseVersion: params.RELEASE_VERSION
+                    ])
                     
-                    echo "📖 Из Map библиотеки получены параметры:"
+                    // Используем метод класса для получения конфигурации тестов
+                    def testConfig = os.getTestConfig(params.RELEASE_VERSION)
+                    
+                    echo "📖 Получены параметры из объекта ${os.class.simpleName}:"
                     echo "   - Test Suite: ${testConfig.testSuite}"
                     echo "   - Timeout: ${testConfig.timeout}"
                     
-                    // СОХРАНЯЕМ ПАРАМЕТРЫ ДЛЯ СЛЕДУДУЮЩЕГО ШАГА
                     env.TEST_SUITE = testConfig.testSuite
                     env.TIMEOUT = testConfig.timeout
                 }
@@ -31,17 +35,14 @@ pipeline {
 
         stage('Trigger Test Job') {
             steps {
-                echo "🚀 Запускаем джобу 'os-tests' с расширенными параметрами..."
-                
-                // КЛЮЧЕВАЯ КОМАНДА: Запуск другой джобы
-                build job: 'Test/os-test', 
+                build job: 'Test/os-tests-sandbox', 
                       parameters: [
                           string(name: 'OS_TYPE', value: params.OS_TYPE),
                           string(name: 'RELEASE_VERSION', value: params.RELEASE_VERSION),
                           string(name: 'TEST_SUITE', value: env.TEST_SUITE),
                           string(name: 'TIMEOUT', value: env.TIMEOUT)
                       ],
-                      wait: false // Не ждать завершения тестов, пусть идут фоном (или wait: true, если нужно синхронно)
+                      wait: false
             }
         }
     }

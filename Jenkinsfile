@@ -1,4 +1,4 @@
-@Library('os-build-lib') _
+@Library('os-build-lib@feature/sandbox-test-lib') _
 
 pipeline {
     agent any
